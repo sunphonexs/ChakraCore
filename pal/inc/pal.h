@@ -87,6 +87,17 @@ typedef __builtin_va_list va_list;
     fprintf(stderr, __VA_ARGS__)
 #endif
 
+#define TRACE_IT(line) LOGGER logger__##line (line)
+
+class LOGGER {
+public:
+  ULONGLONG start_tick;
+  long ID;
+
+  LOGGER(long id);
+  ~LOGGER();
+};
+
 #ifdef  __cplusplus
 extern "C" {
 #endif
