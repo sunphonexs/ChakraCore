@@ -87,16 +87,17 @@ typedef __builtin_va_list va_list;
     fprintf(stderr, __VA_ARGS__)
 #endif
 
-#define TRACE_IT(line) LOGGER logger__##line (line)
+void TRACE_IT(long line);
+// #define TRACE_IT(line) LOGGER logger__##line (line)
 
-class LOGGER {
-public:
-  ULONGLONG start_tick;
-  long ID;
-
-  LOGGER(long id);
-  ~LOGGER();
-};
+// class LOGGER {
+// public:
+//   unsigned long start_tick;
+//   long ID;
+//
+//   LOGGER(long id);
+//   ~LOGGER();
+// };
 
 #ifdef  __cplusplus
 extern "C" {
@@ -179,11 +180,6 @@ extern "C" {
 #endif // !_MSC_VER
 
 /******************* ABI-specific glue *******************************/
-
-#if defined(_PPC_) || defined(_PPC64_) || defined(_SPARC_) || defined(_PARISC_) || defined(_IA64_)
-#define BIGENDIAN 1
-#endif
-
 #ifdef __APPLE__
 // Both PowerPC, i386 and x86_64 on Mac OS X use 16-byte alignment.
 #define STACK_ALIGN_BITS             4

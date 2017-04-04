@@ -78,6 +78,92 @@ using namespace CorUnix;
 // $$TODO The C++ compiler doesn't like pal/cruntime.h so duplicate the
 // necessary prototype here
 //
+// ***** LOGGING IMPL. STARTS *****
+
+#define LOGLEN (500000)
+
+struct LOGGY {
+  ULONGLONG time;
+  long      count;
+};
+static LOGGY IDS[LOGLEN] = { 0 };
+static long CALL_LOG[LOGLEN] = { 0 };
+static long LOG_COUNT = 0;
+static int thread_counter = 1;
+static thread_local int thread_id = 0;
+
+inline ULONGLONG rdtsc()
+{
+    ULONGLONG H, L;
+    __asm volatile ("rdtsc":"=a"(L), "=d"(H));
+
+    return (H << 32) | L;
+}
+
+ULONGLONG start_tick = 0;
+void _PRINT_LOG() {
+  if (LOG_COUNT == -1) return;
+  printf("] %lu \n", LOG_COUNT);
+  // for(long i = 0; i < LOG_COUNT; i++) {
+  //   if ( (i % 500) == 0 && i!=0) {printf("\nTIME: %lu\n", CALL_LOG[i]); continue; }
+  //   printf("%d,", CALL_LOG[i]);
+  //   if ( (i % 20) == 1) printf("\n");
+  // }
+  LOG_COUNT = -1;
+
+  // printf("\
+  // var child = require('child_process'); \n\
+  // function PRINT(){\n\
+  // for(var o in data) {\n\
+  //   if (data.hasOwnProperty(o) && o != 'END') {\n\
+  //     var f = child.execSync('node ../SourceCodePatcher/RESULT.js ' + o) + ''; \n\
+  //     f = f.replace('RESULT -> ', '').replace('\\n', '');\n\
+  //     console.log(f, 'time:', data[o].tm/1e6, ' cnt:', data[o].cnt);\n\
+  //   }\n\
+  // } };\n\
+  // ");
+  // printf("var data = {");
+  for(long i = 0; i < LOGLEN; i++) {
+    if (IDS[i].time > 0) { // IDS[i].count < 1e5 && IDS[i].count > 10) {
+      printf("\"%d\":{\"tm\":%lu, \"cnt\":%lu},\n", i, IDS[i].time, IDS[i].count);
+    }
+  }
+  // printf("\"END\":{}};\nPRINT();");
+}
+
+static long SKIP_COUNT = 0;
+static long prev_id = 0;
+static unsigned long long PREV_TIME = 0;
+void TRACE_IT(long ID) {
+  if (LOG_COUNT == -1) return;
+  long _tid = thread_id;
+  if (_tid == 0 && thread_counter == 1) { thread_id = 1; thread_counter = 2; atexit([]() { _PRINT_LOG(); }); }
+  else if (_tid != 1 && thread_counter > 1) return;
+
+  // if (SKIP_COUNT++ < 3000) return;
+
+  if (start_tick == 0) { start_tick = rdtsc(); for(long i = 0; i < LOGLEN; i++) IDS[i] = {0, 0}; PREV_TIME = rdtsc();}
+
+  CALL_LOG[LOG_COUNT++] = ID;
+  if (LOG_COUNT % 500 == 0) {
+    CALL_LOG[LOG_COUNT++] = rdtsc() - PREV_TIME;
+    PREV_TIME = rdtsc();
+  }
+  if (prev_id != 0)
+  {
+      IDS[prev_id].time += rdtsc() - start_tick;
+  }
+  prev_id = ID;
+  IDS[prev_id].count++;
+
+  start_tick = rdtsc();
+
+  if (LOG_COUNT >= LOGLEN - 1000) {
+    _PRINT_LOG();
+  }
+}
+
+// ***** LOGGING IMPL. ENDS *****
 
 extern "C" BOOL CRTInitStdStreams( void );
 

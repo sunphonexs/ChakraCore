@@ -113,9 +113,9 @@ JsValueRef __stdcall WScriptJsrt::EchoCallback(JsValueRef callee, bool isConstru
             {
                 if (i > 1)
                 {
-                    wprintf(_u(" "));
+                    fwprintf(stderr, _u(" "));
                 }
-                wprintf(_u("%ls"), str.GetWideString());
+                fwprintf(stderr, _u("%ls"), str.GetWideString());
             }
         }
 
@@ -125,8 +125,8 @@ JsValueRef __stdcall WScriptJsrt::EchoCallback(JsValueRef callee, bool isConstru
         }
     }
 
-    wprintf(_u("\n"));
-    fflush(stdout);
+    fwprintf(stderr, _u("\n"));
+    fflush(stderr);
 
     JsValueRef undefinedValue;
     if (ChakraRTInterface::JsGetUndefinedValue(&undefinedValue) == JsNoError)
